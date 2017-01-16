@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+#
+# Extract git patchset from notmuch emails
+#
+# Copyright (C) 2017 Aurelien Aptel <aurelien.aptel@gmail.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import mailbox
+import sys
+import tempfile
+import subprocess
+import re
+
+def get_body(message):
+    body = None
+    if message.is_multipart():
+        for part in message.walk():
+            if part.is_multipart():
+                for subpart in part.walk():
+                    if subpart.get_content_type() == 'text/plain':
+                        body = subpart.get_payload(decode=True)
+            elif part.get_content_type() == 'text/plain':
+                body = part.get_payload(decode=True)
+    elif message.get_content_type() == 'text/plain':
+        body = message.get_payload(decode=True)
+
+    if isinstance(body, bytes):
+        body = body.decode('utf-8')
+    return body
+
+
+def is_git_patch(msg):
+    # we want to skip cover letters, hence why we look for @@
+    body = get_body(msg)
+    match = re.search(r'''\n@@ [0-9 +,-]+ @@''', body)
+    return ("git-send-email" in msg['x-mailer'] and match)
+
+def main():
+    thread_id = sys.argv[1]
+    with tempfile.NamedTemporaryFile() as in_mb_file:
+        out = subprocess.check_output(['notmuch', 'show', '--format=mbox', thread_id])
+        in_mb_file.write(out)
+        in_mb_file.flush()
+
+        in_mb = mailbox.mbox(in_mb_file.name)
+        with tempfile.NamedTemporaryFile() as out_mb_file:
+            out_mb = mailbox.mbox(out_mb_file.name)
+            for m in in_mb:
+                if is_git_patch(m):
+                    sys.stderr.write(m['subject']+"\n")
+                    out_mb.add(m)
+            out_mb.flush()
+            print(open(out_mb_file.name).read())
+
+if __name__ == '__main__':
+    main()

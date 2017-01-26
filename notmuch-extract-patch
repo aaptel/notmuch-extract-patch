@@ -48,9 +48,9 @@ def is_git_patch(msg):
     return ("git-send-email" in msg['x-mailer'] and match)
 
 def main():
-    thread_id = sys.argv[1]
+    query = sys.argv[1:]
     with tempfile.NamedTemporaryFile() as in_mb_file:
-        out = subprocess.check_output(['notmuch', 'show', '--format=mbox', thread_id])
+        out = subprocess.check_output(['notmuch', 'show', '--format=mbox']+query)
         in_mb_file.write(out)
         in_mb_file.flush()
 

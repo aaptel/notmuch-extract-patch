@@ -45,7 +45,8 @@ def is_git_patch(msg):
     # we want to skip cover letters, hence why we look for @@
     body = get_body(msg)
     match = re.search(r'''\n@@ [0-9 +,-]+ @@''', body)
-    return ("git-send-email" in msg['x-mailer'] and match)
+    # return ("git-send-email" in msg['x-mailer'] and match)
+    return match
 
 def main():
     query = sys.argv[1:]

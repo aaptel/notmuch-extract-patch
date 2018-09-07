@@ -7,6 +7,9 @@ grouped in a thread, one patch per email. ("[PATCH 1/15] do blah...").
 Simply exporting the thread is not enough, you need to skip any
 feedbacks or cover letters that have been posted on the thread.
 
+You also want to make sure the emails are sorted according to the
+patch number in the subject.
+
 This is what this script does.
 
 Example usage:

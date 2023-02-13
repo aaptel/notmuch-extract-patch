@@ -90,7 +90,7 @@ def main():
         print("no emails returned by the query", file=sys.stderr)
         exit(1)
     if len(patches) == 0:
-        print("no patches found in the %d emails returned bu the query"%n, file=sys.stderr)
+        print("no patches found in the %d emails returned by the query"%n, file=sys.stderr)
         exit(1)
 
     if len(patches) > 1:
